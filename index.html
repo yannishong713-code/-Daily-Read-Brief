@@ -264,18 +264,22 @@ function buildFlow(){
 function buildEtfs(){
   var acts={};var etfs=(SNAP&&SNAP.analysis&&SNAP.analysis.etfs)||[];
   etfs.forEach(function(x){acts[x.code]=x;});
+  var sq={};(SNAP&&SNAP.etfs||[]).forEach(function(x){sq[x.code]=x;}); // 快照自带价格，作兜底
   var h='';
   ETF.forEach(function(x){
     var a=acts[x.code];var act=a?a.act:'--';
     var why=a?a.why:'等待快照';
+    var q=sq[x.code];
+    var pInit=q?(q.price.toFixed(3)+'  '+sgn(q.pct)+q.pct.toFixed(2)+'%'):'--';
+    var pCls=q?cls(q.pct):'';
     var icon=ACT_ICON[act]||'';
     h+='<tr data-code="'+x.code+'">'+
       '<td class="nm">'+x.name+'<div class="why">'+esc(why)+'</div></td>'+
-      '<td class="px" style="width:46%">--</td>'+
+      '<td class="px '+pCls+'" style="width:46%">'+pInit+'</td>'+
       '<td style="text-align:right;width:86px"><span class="act '+actClass(act)+'">'+icon+' '+esc(act)+'</span></td></tr>';
   });
   document.getElementById('etfTbl').innerHTML=h;
-  document.getElementById('etfNote').textContent=(SNAP&&SNAP.meta&&SNAP.meta.generatedAt)?'AI动作来自 '+(SNAP.meta.generatedAt||'')+' 快照，价格实时刷新：🟢加仓/逢跌加 · 🟡持有/等待 · 🟠减仓':'首个盘后快照将于交易日 15:35 由 GitHub Actions 自动生成，当前仅实时行情';
+  document.getElementById('etfNote').textContent=(SNAP&&SNAP.meta&&SNAP.meta.generatedAt)?'AI动作来自 '+(SNAP.meta.generatedAt||'')+' 快照；价格=快照兜底+实时刷新（绿涨红跌）：🟢加仓/逢跌加 · 🟡持有/等待 · 🟠减仓':'⚠️ 本页尚无快照：请确认上传的是 GitHub Actions 生成的 index.html（非模板），且 Actions 已运行至少一次';
 }
 function buildJudge(){
   var a=SNAP&&SNAP.analysis;if(!a){return;}
@@ -309,6 +313,7 @@ function buildWin(){
 }
 function buildBanner(){
   var b=document.getElementById('bannerBox');b.innerHTML='';
+  if(!SNAP){ b.innerHTML='<div class="banner blue">⚠️ 本页未含盘后快照（SNAP 为空）。这通常是因为：① 上传的是模板文件 index.template.html 而非生成的 index.html；② GitHub Actions 尚未运行过。请重新上传由 Actions 生成的 index.html，并确认 Pages 已启用、至少运行过一次工作流。</div>'; return; }
   if(SNAP&&SNAP.meta&&SNAP.meta.label==='盘中预览'){
     b.innerHTML='<div class="banner">⏱ 当前为<b>盘中预览</b>（'+esc(SNAP.meta.generatedAt||'')+'）。收盘后 15:35 快照将自动覆盖本页。</div>';
   }
